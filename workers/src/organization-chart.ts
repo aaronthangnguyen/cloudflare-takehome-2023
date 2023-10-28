@@ -1,8 +1,19 @@
 import { Employee, getEmployees, postEmployees } from './kv/employees';
-import Papa, { ParseResult } from 'papaparse';
+import Papa from 'papaparse';
 
 interface RequestBody {
 	organizationData: string;
+}
+
+interface EmployeeCsv {
+	name: string;
+	department: string;
+	salary: number;
+	office: string;
+	isManager: boolean;
+	skill1: string;
+	skill2: string;
+	skill3: string;
 }
 
 interface Department {
@@ -42,7 +53,7 @@ const getOrganizationChart = async (request: Request, kvStore: KVNamespace): Pro
 };
 
 const parseEmployees = (csvStr: string): Employee[] => {
-	const value = Papa.parse<any>(csvStr, {
+	const value = Papa.parse<EmployeeCsv>(csvStr, {
 		header: true,
 		dynamicTyping: true,
 	});
