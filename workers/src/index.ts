@@ -9,11 +9,9 @@
  */
 
 import { handlePostEmployee } from './employee';
-import { aboutMe as handleAboutMe } from './me';
-import {
-	getOrganizationChart as handleGetOrganizationChart,
-	postOrganizationChart as handlePostOrganizationChart,
-} from './organization-chart';
+import { handleAboutMe } from './me';
+import { handleGetOrganizationChart, handlePostOrganizationChart } from './organization-chart';
+import { handleGetOrgChart } from './orgchart';
 
 export interface Env {
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -33,18 +31,21 @@ export interface Env {
 }
 
 const handleRequest = async (request: Request, env: Env): Promise<Response> => {
+	const { method } = request;
 	const { pathname } = new URL(request.url);
 
 	if (pathname === '' || pathname === '/') {
 		return new Response('Hello world!');
 	} else if (pathname === '/me') {
 		return handleAboutMe();
-	} else if (request.method === 'GET' && pathname === '/organization-chart') {
+	} else if (method === 'GET' && pathname === '/organization-chart') {
 		return handleGetOrganizationChart(request, env.ORG_KV);
-	} else if (request.method === 'POST' && pathname === '/organization-chart') {
+	} else if (method === 'POST' && pathname === '/organization-chart') {
 		return handlePostOrganizationChart(request, env.ORG_KV);
-	} else if (request.method === 'POST' && pathname === '/employee') {
+	} else if (method === 'POST' && pathname === '/employee') {
 		return handlePostEmployee(request, env.ORG_KV);
+	} else if (method === 'GET' && pathname === '/orgchart') {
+		return handleGetOrgChart(request, env.ORG_KV);
 	}
 
 	return new Response('Not Found', { status: 404 });
