@@ -11,9 +11,9 @@ interface EmployeeCsv {
 	salary: number;
 	office: string;
 	isManager: boolean;
-	skill1: string;
-	skill2: string;
-	skill3: string;
+	skill1?: string;
+	skill2?: string;
+	skill3?: string;
 }
 
 interface Department {
@@ -41,7 +41,26 @@ const getDepartments = (employees: Employee[]) => {
 	return Object.values(departments);
 };
 
-const getOrganizationChart = async (request: Request, kvStore: KVNamespace): Promise<Response> => {
+const parseEmployees = (csvStr: string): Employee[] => {
+	const value = Papa.parse<EmployeeCsv>(csvStr, {
+		header: true,
+		dynamicTyping: true,
+	});
+	const employees = value.data;
+	return employees.map((employee) => {
+		const { name, department, salary, office, isManager, skill1, skill2, skill3 } = employee;
+		return {
+			name,
+			department,
+			salary,
+			office,
+			isManager,
+			skills: [skill1, skill2, skill3],
+		} as Employee;
+	});
+};
+
+const handleGetOrganizationChart = async (request: Request, kvStore: KVNamespace): Promise<Response> => {
 	const employees = await getEmployees(kvStore);
 	const responseData = { organization: { departments: getDepartments(employees) } };
 	return new Response(JSON.stringify(responseData), {
@@ -52,23 +71,7 @@ const getOrganizationChart = async (request: Request, kvStore: KVNamespace): Pro
 	});
 };
 
-const parseEmployees = (csvStr: string): Employee[] => {
-	const value = Papa.parse<EmployeeCsv>(csvStr, {
-		header: true,
-		dynamicTyping: true,
-	});
-	const employees = value.data;
-	return employees.map((employee) => {
-		const skills = [employee.skill1, employee.skill2, employee.skill3];
-		delete employee.skill1;
-		delete employee.skill2;
-		delete employee.skill3;
-		employee.skills = skills;
-		return employee;
-	}) as Employee[];
-};
-
-const postOrganizationChart = async (request: Request, kvStore: KVNamespace): Promise<Response> => {
+const handlePostOrganizationChart = async (request: Request, kvStore: KVNamespace): Promise<Response> => {
 	try {
 		const requestBody = (await request.json()) as Partial<RequestBody>;
 		if (typeof requestBody.organizationData !== 'string') {
@@ -83,4 +86,4 @@ const postOrganizationChart = async (request: Request, kvStore: KVNamespace): Pr
 	}
 };
 
-export { getOrganizationChart, postOrganizationChart };
+export { handleGetOrganizationChart, handlePostOrganizationChart };
