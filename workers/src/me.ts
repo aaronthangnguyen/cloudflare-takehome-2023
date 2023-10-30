@@ -1,4 +1,4 @@
-const aboutMe = () => {
+const handleAboutMe = () => {
 	const responseData = {
 		name: 'Aaron Nguyen',
 		homepage: 'https://aaronnguyen.dev/',
@@ -42,4 +42,4 @@ const aboutMe = () => {
 	});
 };
 
-export { aboutMe };
+export { handleAboutMe };
