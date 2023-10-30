@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 interface Employee {
+	id?: string;
 	name: string;
 	department: string;
 	salary: number;
@@ -9,18 +10,26 @@ interface Employee {
 	skills: string[];
 }
 
-const getEmployees = async (kvStore: KVNamespace) => {
-	const value = await kvStore.list<string>();
-	const employeePromises: Promise<Employee | null>[] = value.keys.map(async ({ name: id }) => {
-		const value = await kvStore.get<Employee>(id, { type: 'json' });
-		return value;
-	});
+interface Options {
+	id?: boolean;
+}
 
-	const filteredEmployeePromises: Promise<Employee>[] = employeePromises
-		.filter((promise): promise is Promise<Employee> => promise !== null)
-		.map((promise) => promise as Promise<Employee>);
+const getEmployees = async (kvStore: KVNamespace, options?: Options) => {
+	const { keys } = await kvStore.list<string>();
 
-	return await Promise.all(filteredEmployeePromises);
+	const employees = await Promise.all(
+		keys.map(async ({ name: id }) => {
+			const employee = await kvStore.get<Employee>(id, { type: 'json' });
+
+			if (employee && options?.id) {
+				employee.id = id;
+			}
+
+			return employee;
+		})
+	);
+
+	return employees.filter((employee): employee is Employee => employee !== null);
 };
 
 const postEmployees = async (employees: Employee[], kvStore: KVNamespace): Promise<void> => {
